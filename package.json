@@ -17,6 +17,7 @@
     "format": "prettier -w --ignore-path=.gitignore .",
     "format:check": "prettier -c --ignore-path=.gitignore .",
     "test": "nyc node -r jiti/register test.ts",
+    "coverage": "mkdir -p coverage && touch coverage/lcov.info && nyc report --reporter=text-lcov > coverage/lcov.info",
     "build": "rimraf dist && tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build"
   },
