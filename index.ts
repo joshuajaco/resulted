@@ -25,93 +25,69 @@ export type Result<T, E> = Attributes<T, E> & Methods<T, E>;
 function createResult<T, E>(init: Attributes<T, E>): Result<T, E> {
   return {
     ...init,
-    expect(message) {
+
+    expect: (message) => {
       if (init.ok) return init.value;
       throw new Error(message);
     },
-    expectError(message) {
+
+    expectError: (message) => {
       if (init.ok) throw new Error(message);
       return init.error;
     },
-    unwrap() {
+
+    unwrap: () => {
       if (init.ok) return init.value;
       throw new Error();
     },
-    unwrapOr(_default) {
-      if (init.ok) return init.value;
-      return _default;
-    },
-    unwrapOrElse(fn) {
-      if (init.ok) return init.value;
-      return fn(init.error);
-    },
-    and(result) {
-      if (init.ok) return result;
-      return createResult(init);
-    },
-    andThen(fn) {
-      if (init.ok) return fn(init.value);
-      return createResult(init);
-    },
-    or(result) {
-      if (init.ok) return createResult(init);
-      return result;
-    },
-    orElse(fn) {
-      if (init.ok) return createResult(init);
-      return fn(init.error);
-    },
-    map(fn) {
-      if (init.ok) return createResult({ ok: true, value: fn(init.value) });
-      return createResult(init);
-    },
-    mapError(fn) {
-      if (init.ok) return createResult(init);
-      return createResult({ ok: false, error: fn(init.error) });
-    },
-    mapOr(_default, fn) {
-      if (init.ok) return fn(init.value);
-      return _default;
-    },
-    mapOrElse(defaultFn, fn) {
-      if (init.ok) return fn(init.value);
-      return defaultFn(init.error);
-    },
-    match(matcher) {
-      if (init.ok) return matcher.ok(init.value);
-      return matcher.error(init.error);
-    },
+
+    unwrapOr: (_default) => (init.ok ? init.value : _default),
+    unwrapOrElse: (fn) => (init.ok ? init.value : fn(init.error)),
+    and: (result) => (init.ok ? result : createResult(init)),
+    andThen: (fn) => (init.ok ? fn(init.value) : createResult(init)),
+    or: (result) => (init.ok ? createResult(init) : result),
+    orElse: (fn) => (init.ok ? createResult(init) : fn(init.error)),
+
+    map: (fn) =>
+      createResult(init.ok ? { ok: true, value: fn(init.value) } : init),
+
+    mapError: (fn) =>
+      createResult(init.ok ? init : { ok: false, error: fn(init.error) }),
+
+    mapOr: (_default, fn) => (init.ok ? fn(init.value) : _default),
+
+    mapOrElse: (defaultFn, fn) =>
+      init.ok ? fn(init.value) : defaultFn(init.error),
+
+    match: (matcher) =>
+      init.ok ? matcher.ok(init.value) : matcher.error(init.error),
   };
 }
 
 export const Result = {
-  ok<T, E>(value: T): Result<T, E> {
-    return createResult({ ok: true, value });
-  },
-  error<T, E>(error: E): Result<T, E> {
-    return createResult({ ok: false, error });
-  },
-  equals<T, E>(a: Result<T, E>, b: Result<T, E>): boolean {
-    if (a.ok) return b.ok && a.value === b.value;
-    if (!b.ok) return a.error === b.error;
-    return false;
-  },
-  from<T, E>(fn: () => T): Result<T, E> {
+  ok: <T, E>(value: T): Result<T, E> => createResult({ ok: true, value }),
+  error: <T, E>(error: E): Result<T, E> => createResult({ ok: false, error }),
+
+  equals: <T, E>(a: Result<T, E>, b: Result<T, E>): boolean =>
+    a.ok ? b.ok && a.value === b.value : !b.ok && a.error === b.error,
+
+  from: <T, E>(fn: () => T): Result<T, E> => {
     try {
       return Result.ok(fn());
     } catch (e: any) {
       return Result.error(e);
     }
   },
-  wrap<T, E, A extends Array<any> = []>(
-    fn: (...args: A) => T
-  ): (...args: A) => Result<T, E> {
-    return (...args) => {
+
+  wrap:
+    <T, E, A extends Array<any> = []>(
+      fn: (...args: A) => T
+    ): ((...args: A) => Result<T, E>) =>
+    (...args) => {
       try {
         return Result.ok(fn(...args));
       } catch (e: any) {
         return Result.error(e);
       }
-    };
-  },
+    },
 };
