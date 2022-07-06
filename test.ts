@@ -1,5 +1,6 @@
-import { Result } from "./index";
 import assert from "assert";
+import { expectType } from "ts-expect";
+import { Result } from "./index";
 
 const { ok, error, equals, from, wrap } = Result;
 
@@ -184,3 +185,14 @@ assert(equals(ok<number, number>(2).orElse(err).orElse(sq), ok(2)));
 assert(equals(error<number, number>(3).orElse(sq).orElse(err), ok(9)));
 
 assert(equals(error<number, number>(3).orElse(err).orElse(err), error(3)));
+
+// match
+
+assert.equal(ok(1).match({ ok: (x) => x.toString(), error: () => {} }), "1");
+assert.equal(error(1).match({ ok: () => {}, error: (x) => x.toString() }), "1");
+
+expectType<number>(ok(1).match({ ok: () => 1, error: () => 1 }));
+expectType<"foo" | "bar">(ok(1).match({ ok: () => "foo", error: () => "bar" }));
+
+// @ts-expect-error
+expectType<string>(ok(1).match({ ok: () => "foo", error: () => {} }));

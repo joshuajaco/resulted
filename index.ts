@@ -10,6 +10,10 @@ type Methods<T, E> = {
   andThen: <U>(fn: (value: T) => Result<U, E>) => Result<U, E>;
   or: <F>(result: Result<T, F>) => Result<T, F>;
   orElse: <F>(fn: (error: E) => Result<T, F>) => Result<T, F>;
+  match: <U, F>(matcher: {
+    ok: (value: T) => U;
+    error: (error: E) => F;
+  }) => U | F;
 };
 
 type Attributes<T, E> = { ok: true; value: T } | { ok: false; error: E };
@@ -62,6 +66,10 @@ function createResult<T, E>(init: Attributes<T, E>): Result<T, E> {
     mapError(fn) {
       if (init.ok) return createResult(init);
       return createResult({ ok: false, error: fn(init.error) });
+    },
+    match(matcher) {
+      if (init.ok) return matcher.ok(init.value);
+      return matcher.error(init.error);
     },
   };
 }
