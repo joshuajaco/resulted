@@ -134,6 +134,18 @@ assert(
   )
 );
 
+// mapOr
+
+assert.equal(
+  ok("foo").mapOr(42, (s) => s.length),
+  3
+);
+
+assert.equal(
+  error<string, string>("bar").mapOr(42, (s) => s.length),
+  42
+);
+
 // and
 
 assert(
