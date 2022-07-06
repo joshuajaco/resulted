@@ -7,6 +7,7 @@ type Methods<T, E> = {
   map: <U>(fn: (value: T) => U) => Result<U, E>;
   mapError: <F>(fn: (error: E) => F) => Result<T, F>;
   mapOr: <U>(_default: U, fn: (value: T) => U) => U;
+  mapOrElse: <U>(defaultFn: (error: E) => U, fn: (value: T) => U) => U;
   and: <U>(result: Result<U, E>) => Result<U, E>;
   andThen: <U>(fn: (value: T) => Result<U, E>) => Result<U, E>;
   or: <F>(result: Result<T, F>) => Result<T, F>;
@@ -71,6 +72,10 @@ function createResult<T, E>(init: Attributes<T, E>): Result<T, E> {
     mapOr(_default, fn) {
       if (init.ok) return fn(init.value);
       return _default;
+    },
+    mapOrElse(defaultFn, fn) {
+      if (init.ok) return fn(init.value);
+      return defaultFn(init.error);
     },
     match(matcher) {
       if (init.ok) return matcher.ok(init.value);

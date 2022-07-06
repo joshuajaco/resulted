@@ -146,6 +146,24 @@ assert.equal(
   42
 );
 
+// mapOrElse
+
+assert.equal(
+  ok("foo").mapOrElse(
+    (_e) => 42,
+    (s) => s.length
+  ),
+  3
+);
+
+assert.equal(
+  error<string, string>("bar").mapOrElse(
+    (e) => e.length * 3,
+    (s) => s.length
+  ),
+  9
+);
+
 // and
 
 assert(
