@@ -1,155 +1,121 @@
 import assert from "assert";
-import { expectType } from "ts-expect";
-import { Result } from "./index";
+import { Result, Ok, Err } from "./index";
 
-const { ok, error, equals, from, wrap } = Result;
+// Result
+
+assert.strictEqual(Result.Ok, Ok);
+assert.strictEqual(Result.Err, Err);
 
 // ok
-
-assert.deepEqual(JSON.parse(JSON.stringify(ok(1))), { ok: true, value: 1 });
+assert.deepEqual(JSON.parse(JSON.stringify(Ok(1))), { ok: true, value: 1 });
 
 // error
 
-assert.deepEqual(JSON.parse(JSON.stringify(error(1))), { ok: false, error: 1 });
+assert.deepEqual(JSON.parse(JSON.stringify(Err(1))), { ok: false, error: 1 });
 
-// equals
+// eq
 
-assert(equals(ok(1), ok(1)));
-assert(equals(error(1), error(1)));
+assert(Ok(1).eq(Ok(1)));
+assert(Err(1).eq(Err(1)));
 
-assert(!equals(ok(1), ok(2)));
-assert(!equals(error(1), error(2)));
+assert(!Ok(1).eq(Ok(2)));
+assert(!Err(1).eq(Err(2)));
 
-assert(!equals(error<number, number>(1), ok(1)));
-assert(!equals(ok<number, number>(1), error(1)));
-
-// from
-
-assert(
-  equals(
-    from(() => 1),
-    ok(1)
-  )
-);
-
-assert(
-  equals(
-    from<void, number>(() => {
-      throw 1;
-    }),
-    error(1)
-  )
-);
-
-// wrap
-
-assert(equals(wrap((x) => x)(1), ok(1)));
-
-assert(
-  equals(
-    wrap<number, number, [number]>((x) => {
-      throw x;
-    })(1),
-    error(1)
-  )
-);
+assert(!Err<number, number>(1).eq(Ok(1)));
+assert(!Ok<number, number>(1).eq(Err(1)));
 
 // expect
 
 try {
-  const x = error("emergency failure");
+  const x = Err("emergency failure");
   x.expect("Testing expect");
 } catch (e) {
   assert(e instanceof Error);
   assert(e.message === "Testing expect");
 }
 
-assert.equal(ok(10).expect("Testing expectError"), 10);
+assert.equal(Ok(10).expect("Testing expectError"), 10);
 
 // expectError
 
 try {
-  const x = ok(10);
+  const x = Ok(10);
   x.expectError("Testing expectError");
 } catch (e) {
   assert(e instanceof Error);
   assert(e.message === "Testing expectError");
 }
 
-assert.equal(error(10).expectError("Testing expectError"), 10);
+assert.equal(Err(10).expectError("Testing expectError"), 10);
 
 // unwrap
 
 try {
-  const x = error("emergency failure");
+  const x = Err("emergency failure");
   x.unwrap();
 } catch (e) {
   assert(e instanceof Error);
   assert(e.message === "");
 }
 
-assert.equal(ok(10).unwrap(), 10);
+assert.equal(Ok(10).unwrap(), 10);
 
 // unwrapOr
 
-assert.equal(ok(9).unwrapOr(2), 9);
-assert.equal(error("error").unwrapOr(2), 2);
+assert.equal(Ok(9).unwrapOr(2), 9);
+assert.equal(Err("error").unwrapOr(2), 2);
 
 // unwrapOrElse
 
 const count = (x: string) => x.length;
 
-assert.equal(ok<number, string>(2).unwrapOrElse(count), 2);
-assert.equal(error("foo").unwrapOrElse(count), 3);
+assert.equal(Ok<number, string>(2).unwrapOrElse(count), 2);
+assert.equal(Err("foo").unwrapOrElse(count), 3);
 
 // map
 
 assert(
-  equals(
-    ok("foo").map((s) => s.length),
-    ok(3)
-  )
+  Ok("foo")
+    .map((s) => s.length)
+    .eq(Ok(3))
 );
 
 assert(
-  equals(
-    error<string, string>("error").map((s) => s.length),
-    error("error")
-  )
+  Err<string, string>("error")
+    .map((s) => s.length)
+    .eq(Err("error"))
 );
 
 // mapError
 
 assert(
-  equals(
-    error("error").mapError((s) => s.length),
-    error(5)
-  )
+  Err("error")
+    .mapError((s) => s.length)
+    .eq(Err(5))
 );
 
 assert(
-  equals(
-    ok<string, string>("foo").mapError((s) => s.length),
-    ok("foo")
-  )
+  Ok<string, string>("foo")
+    .mapError((s) => s.length)
+    .eq(Ok("foo"))
 );
 
 // mapOr
 
 assert.equal(
-  ok("foo").mapOr(42, (s) => s.length),
+  Ok("foo").mapOr(42, (s) => s.length),
   3
 );
 
 assert.equal(
-  error<string, string>("bar").mapOr(42, (s) => s.length),
+  Err<string, string>("bar").mapOr(42, (s) => s.length),
   42
 );
 
 // mapOrElse
 
 assert.equal(
-  ok("foo").mapOrElse(
+  Ok("foo").mapOrElse(
     (_e) => 42,
     (s) => s.length
   ),
@@ -157,7 +123,7 @@ assert.equal(
 );
 
 assert.equal(
-  error<string, string>("bar").mapOrElse(
+  Err<string, string>("bar").mapOrElse(
     (e) => e.length * 3,
     (s) => s.length
   ),
@@ -166,63 +132,50 @@ assert.equal(
 
 // and
 
-assert(
-  equals(ok<number, string>(2).and(error("late error")), error("late error"))
-);
+assert(Ok<number, string>(2).and(Err("late error")).eq(Err("late error")));
 
-assert(equals(error("early error").and(ok("foo")), error("early error")));
+assert(Err("early error").and(Ok("foo")).eq(Err("early error")));
 
-assert(equals(error("not a 2").and(error("late error")), error("not a 2")));
+assert(Err("not a 2").and(Err("late error")).eq(Err("not a 2")));
 
-assert(
-  equals(ok(2).and(ok("different result type")), ok("different result type"))
-);
+assert(Ok(2).and(Ok("different result type")).eq(Ok("different result type")));
 
 // andThen
 
 assert(
-  equals(
-    ok(2).andThen((i) => ok(i.toString())),
-    ok("2")
-  )
+  Ok(2)
+    .andThen((i) => Ok(i.toString()))
+    .eq(Ok("2"))
 );
 
 assert(
-  equals(
-    error<number, number>(2).andThen((i) => ok(i.toString())),
-    error(2)
-  )
+  Err<number, number>(2)
+    .andThen((i) => Ok(i.toString()))
+    .eq(Err(2))
 );
 
 // or
 
-assert(equals(ok(2).or(error("late error")), ok(2)));
+assert(Ok(2).or(Err("late error")).eq(Ok(2)));
 
-assert(equals(error<number, string>("early error").or(ok(2)), ok(2)));
+assert(Err<number, string>("early error").or(Ok(2)).eq(Ok(2)));
 
-assert(equals(error("not a 2").or(error("late error")), error("late error")));
+assert(Err("not a 2").or(Err("late error")).eq(Err("late error")));
 
-assert(equals(ok(2).or(ok(100)), ok(2)));
+assert(Ok(2).or(Ok(100)).eq(Ok(2)));
 
 // orElse
 
-const sq = (x: number): Result<number, number> => ok(x * x);
-const err = (x: number): Result<number, number> => error(x);
+const sq = (x: number): Result<number, number> => Ok(x * x);
+const err = (x: number): Result<number, number> => Err(x);
 
-assert(equals(ok<number, number>(2).orElse(sq).orElse(sq), ok(2)));
-assert(equals(ok<number, number>(2).orElse(err).orElse(sq), ok(2)));
+assert(Ok<number, number>(2).orElse(sq).orElse(sq).eq(Ok(2)));
+assert(Ok<number, number>(2).orElse(err).orElse(sq).eq(Ok(2)));
 
-assert(equals(error<number, number>(3).orElse(sq).orElse(err), ok(9)));
+assert(Err<number, number>(3).orElse(sq).orElse(err).eq(Ok(9)));
 
-assert(equals(error<number, number>(3).orElse(err).orElse(err), error(3)));
+assert(Err<number, number>(3).orElse(err).orElse(err).eq(Err(3)));
 
-// match
-
-assert.equal(ok(1).match({ ok: (x) => x.toString(), error: () => {} }), "1");
-assert.equal(error(1).match({ ok: () => {}, error: (x) => x.toString() }), "1");
-
-expectType<number>(ok(1).match({ ok: () => 1, error: () => 1 }));
-expectType<"foo" | "bar">(ok(1).match({ ok: () => "foo", error: () => "bar" }));
-
-// @ts-expect-error
-expectType<string>(ok(1).match({ ok: () => "foo", error: () => {} }));
+function foo(): Result<undefined, number> {
+  return Ok();
+}
