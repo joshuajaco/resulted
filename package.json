@@ -3,7 +3,10 @@
   "version": "0.0.2",
   "repository": "joshuajaco/resulted",
   "license": "MIT",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
   "main": "./dist/index.js",
   "files": [
     "dist"
