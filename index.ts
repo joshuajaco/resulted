@@ -35,7 +35,7 @@ export const Result = { Ok, Err };
 export default Result;
 
 function createResult<T, E>(
-  init: { ok: true; value: T } | { ok: false; error: E }
+  init: { ok: true; value: T } | { ok: false; error: E },
 ): Result<T, E> {
   return {
     ...init,
