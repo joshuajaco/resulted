@@ -77,13 +77,13 @@ assert.equal(Err("foo").unwrapOrElse(count), 3);
 assert(
   Ok("foo")
     .map((s) => s.length)
-    .eq(Ok(3))
+    .eq(Ok(3)),
 );
 
 assert(
   Err<string, string>("error")
     .map((s) => s.length)
-    .eq(Err("error"))
+    .eq(Err("error")),
 );
 
 // mapError
@@ -91,25 +91,25 @@ assert(
 assert(
   Err("error")
     .mapError((s) => s.length)
-    .eq(Err(5))
+    .eq(Err(5)),
 );
 
 assert(
   Ok<string, string>("foo")
     .mapError((s) => s.length)
-    .eq(Ok("foo"))
+    .eq(Ok("foo")),
 );
 
 // mapOr
 
 assert.equal(
   Ok("foo").mapOr(42, (s) => s.length),
-  3
+  3,
 );
 
 assert.equal(
   Err<string, string>("bar").mapOr(42, (s) => s.length),
-  42
+  42,
 );
 
 // mapOrElse
@@ -117,17 +117,17 @@ assert.equal(
 assert.equal(
   Ok("foo").mapOrElse(
     (_e) => 42,
-    (s) => s.length
+    (s) => s.length,
   ),
-  3
+  3,
 );
 
 assert.equal(
   Err<string, string>("bar").mapOrElse(
     (e) => e.length * 3,
-    (s) => s.length
+    (s) => s.length,
   ),
-  9
+  9,
 );
 
 // and
@@ -145,13 +145,13 @@ assert(Ok(2).and(Ok("different result type")).eq(Ok("different result type")));
 assert(
   Ok(2)
     .andThen((i) => Ok(i.toString()))
-    .eq(Ok("2"))
+    .eq(Ok("2")),
 );
 
 assert(
   Err<number, number>(2)
     .andThen((i) => Ok(i.toString()))
-    .eq(Err(2))
+    .eq(Err(2)),
 );
 
 // or
